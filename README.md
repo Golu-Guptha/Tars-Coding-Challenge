@@ -2,75 +2,74 @@
 
 Hey! This is my submission for the Tars Full-Stack Intern Challenge 2026.
 
-I built a real-time chat app where users can sign up, find each other, and start chatting instantly. The messages sync across tabs/devices in real time — no refreshing needed.
+I'm building a real-time chat app where users can sign up, find each other, and start chatting instantly, step by step. Below is what's working right now.
 
-## What it does
+## What's working so far
 
-- **Sign up & log in** with email or Google (powered by Clerk)
-- **Find people** — browse all registered users, search by name
-- **Direct messages** — click on someone to start a private conversation
-- **Real-time everything** — messages, presence, typing indicators all update live
-- **Smart timestamps** — shows "2:34 PM" for today, "Feb 15, 2:34 PM" for older messages
-- **Unread badges** — see how many messages you missed at a glance
-- **Typing indicators** — see when someone is typing back
-- **Online status** — green dot shows who's currently active
-- **Mobile friendly** — full responsive layout, works great on phones
-- **Auto-scroll** — stays at the bottom for new messages, but won't interrupt if you're reading older ones
+### Step 1 — Authentication
+- Sign up and log in with email or Google (via Clerk)
+- User profiles automatically sync to the Convex database
+- Logged-in user's name and avatar shown in the header
+- Protected routes — unauthenticated users get redirected to sign-in
+
+### Step 2 — User List & Search
+- Browse all registered users (you won't see yourself in the list)
+- Search bar that filters users by name as you type
+- Click any user to start a conversation with them
+
+### Step 3 — Direct Messages
+- Send and receive messages in real time using Convex subscriptions
+- Messages appear instantly on both sides without refreshing
+- Your messages show on the right (purple), received messages on the left (gray)
+- Sidebar shows all your conversations with a preview of the last message
+
+### Step 4 — Smart Timestamps
+- Today's messages show time only (e.g. "2:34 PM")
+- Older messages show date + time (e.g. "Feb 15, 2:34 PM")
+- Messages from a different year include the year
+- Timestamps appear on hover to keep the UI clean
 
 ## Tech I used
 
-- **Next.js** with App Router & TypeScript for the frontend
-- **Convex** as the backend — handles the database and real-time subscriptions
-- **Clerk** for all the auth stuff (sign-up, log-in, session management)
-- **Tailwind CSS** + **shadcn/ui** for the UI components
+- **Next.js** with App Router & TypeScript
+- **Convex** for the backend and real-time database
+- **Clerk** for authentication
+- **Tailwind CSS** + **shadcn/ui** for styling
 - Deployed on **Vercel**
 
-## Running it locally
+## Running locally
 
-You'll need Node 18+ and accounts on [Clerk](https://clerk.com) and [Convex](https://convex.dev) (both free).
+You'll need Node 18+ and free accounts on [Clerk](https://clerk.com) and [Convex](https://convex.dev).
 
 ```bash
-# clone it
 git clone https://github.com/Golu-Guptha/Tars-Coding-Challenge.git
 cd Tars-Coding-Challenge
-
-# install deps
 npm install
-
-# set up your env vars
 cp .env.example .env.local
-# then fill in your Clerk + Convex keys in .env.local
+# fill in your Clerk + Convex keys in .env.local
 ```
 
-You need two terminals running:
+Then run two terminals:
 
 ```bash
-# Terminal 1 — start Convex
+# Terminal 1
 npx convex dev
 
-# Terminal 2 — start Next.js
+# Terminal 2
 npm run dev
 ```
 
-Then open [localhost:3000](http://localhost:3000) and you're good to go.
+Open [localhost:3000](http://localhost:3000) and you're good to go.
 
 ## Project structure
-
-Nothing fancy, pretty standard Next.js layout:
 
 ```
 app/            → pages and layouts (App Router)
 components/     → reusable UI components
 convex/         → backend functions, schema, auth config
-lib/            → utility functions (timestamp formatting, etc.)
+lib/            → utility functions (timestamps, etc.)
 ```
-
-## How it works (briefly)
-
-Convex handles all the data and real-time sync. When you send a message, it goes through a Convex mutation, gets stored in the database, and automatically pushes to every connected client that's subscribed to that conversation. No polling, no WebSocket boilerplate — Convex does it all out of the box.
-
-Clerk handles authentication and gives us JWTs that Convex uses to verify who's making each request. So every query and mutation is authenticated server-side.
 
 ---
 
-Built by [Golu Kumar Gupta](https://github.com/Golu-Guptha) for the Tars Internship Challenge 2026.
+Built by [Golu Kumar Gupta](https://github.com/Golu-Guptha)
