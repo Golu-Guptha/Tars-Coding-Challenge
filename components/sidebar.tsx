@@ -11,9 +11,18 @@ import { UserList } from "@/components/user-list";
 
 export function Sidebar() {
     const conversations = useQuery(api.conversations.list);
+    const presenceData = useQuery(api.presence.getAll);
     const router = useRouter();
     const pathname = usePathname();
     const [showUsers, setShowUsers] = useState(false);
+
+    const isUserOnline = (userId: string) => {
+        if (!presenceData) return false;
+        const presence = presenceData.find((p) => p.userId === userId);
+        if (!presence) return false;
+        // Consider online if heartbeat within last 60 seconds
+        return presence.online && Date.now() - presence.lastSeen < 60000;
+    };
 
     return (
         <div className="w-full md:w-80 lg:w-96 border-r border-gray-800 bg-gray-900/50 flex flex-col h-full">
@@ -38,7 +47,6 @@ export function Sidebar() {
                 <ScrollArea className="flex-1">
                     <div className="p-2">
                         {conversations === undefined ? (
-                            // Loading
                             <div className="space-y-2 p-2">
                                 {[...Array(4)].map((_, i) => (
                                     <div key={i} className="flex items-center gap-3 p-3 animate-pulse">
@@ -51,7 +59,6 @@ export function Sidebar() {
                                 ))}
                             </div>
                         ) : conversations.length === 0 ? (
-                            // Empty state
                             <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/10 to-indigo-500/10 flex items-center justify-center mb-4 border border-violet-500/20">
                                     <MessageSquarePlus className="w-7 h-7 text-violet-400" />
@@ -68,6 +75,7 @@ export function Sidebar() {
                                 if (!conv) return null;
                                 const otherUser = conv.otherMembers?.[0];
                                 const isActive = pathname === `/chat/${conv._id}`;
+                                const online = otherUser ? isUserOnline(otherUser._id) : false;
 
                                 return (
                                     <button
@@ -78,12 +86,18 @@ export function Sidebar() {
                                                 : "hover:bg-gray-800/50"
                                             }`}
                                     >
-                                        <Avatar className="w-10 h-10 shrink-0">
-                                            <AvatarImage src={otherUser?.imageUrl} />
-                                            <AvatarFallback className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white text-sm font-medium">
-                                                {otherUser?.name?.charAt(0)?.toUpperCase() ?? "?"}
-                                            </AvatarFallback>
-                                        </Avatar>
+                                        <div className="relative shrink-0">
+                                            <Avatar className="w-10 h-10">
+                                                <AvatarImage src={otherUser?.imageUrl} />
+                                                <AvatarFallback className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white text-sm font-medium">
+                                                    {otherUser?.name?.charAt(0)?.toUpperCase() ?? "?"}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            {/* Online indicator */}
+                                            {online && (
+                                                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-gray-900 rounded-full" />
+                                            )}
+                                        </div>
                                         <div className="flex-1 min-w-0 text-left">
                                             <p
                                                 className={`text-sm font-medium truncate ${isActive ? "text-violet-300" : "text-white"

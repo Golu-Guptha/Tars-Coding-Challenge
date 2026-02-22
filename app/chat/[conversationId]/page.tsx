@@ -20,6 +20,18 @@ export default function ConversationPage({
         conversationId: conversationId as Id<"conversations">,
     });
     const currentUser = useQuery(api.users.getCurrentUser);
+    const typingUsers = useQuery(api.typing.getTyping, {
+        conversationId: conversationId as Id<"conversations">,
+    });
+
+    const otherUser = conversation?.otherMembers?.[0];
+    const presence = useQuery(
+        api.presence.getByUserId,
+        otherUser ? { userId: otherUser._id } : "skip"
+    );
+
+    const isOnline =
+        presence?.online && Date.now() - presence.lastSeen < 60000;
 
     if (!conversation || !currentUser) {
         return (
@@ -32,8 +44,6 @@ export default function ConversationPage({
         );
     }
 
-    const otherUser = conversation.otherMembers?.[0];
-
     return (
         <div className="h-full flex flex-col">
             {/* Chat Header */}
@@ -44,20 +54,46 @@ export default function ConversationPage({
                 >
                     <ArrowLeft className="w-5 h-5" />
                 </button>
-                <Avatar className="w-8 h-8">
-                    <AvatarImage src={otherUser?.imageUrl} />
-                    <AvatarFallback className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white text-xs font-medium">
-                        {otherUser?.name?.charAt(0)?.toUpperCase() ?? "?"}
-                    </AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                    <Avatar className="w-8 h-8">
+                        <AvatarImage src={otherUser?.imageUrl} />
+                        <AvatarFallback className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white text-xs font-medium">
+                            {otherUser?.name?.charAt(0)?.toUpperCase() ?? "?"}
+                        </AvatarFallback>
+                    </Avatar>
+                    {isOnline && (
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-900 rounded-full" />
+                    )}
+                </div>
                 <div>
                     <p className="text-sm font-semibold text-white">
                         {conversation.isGroup
                             ? conversation.groupName
                             : otherUser?.name ?? "Unknown"}
                     </p>
+                    <p className="text-xs text-gray-500">
+                        {typingUsers && typingUsers.length > 0
+                            ? "typing..."
+                            : isOnline
+                                ? "online"
+                                : "offline"}
+                    </p>
                 </div>
             </div>
+
+            {/* Typing indicator */}
+            {typingUsers && typingUsers.length > 0 && (
+                <div className="px-4 py-1.5 flex items-center gap-2 text-xs text-gray-400 bg-gray-900/30">
+                    <div className="flex gap-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                    <span>
+                        {typingUsers.map((u) => u?.name).join(", ")} is typing...
+                    </span>
+                </div>
+            )}
 
             {/* Messages */}
             <MessageList

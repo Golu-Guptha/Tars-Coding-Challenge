@@ -3,6 +3,7 @@
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
 import { usePathname } from "next/navigation";
+import { usePresence } from "@/hooks/use-presence";
 
 export default function ChatLayout({
     children,
@@ -11,6 +12,9 @@ export default function ChatLayout({
 }) {
     const pathname = usePathname();
     const isInConversation = pathname !== "/chat";
+
+    // Track user presence (online/offline)
+    usePresence();
 
     return (
         <div className="h-screen flex flex-col">
@@ -23,7 +27,7 @@ export default function ChatLayout({
                 >
                     <Sidebar />
                 </div>
-                {/* Main chat area: always visible on desktop, shown on mobile only when in a conversation */}
+                {/* Main chat area */}
                 <main
                     className={`${isInConversation ? "flex" : "hidden md:flex"
                         } flex-1 flex-col overflow-hidden bg-gray-950`}

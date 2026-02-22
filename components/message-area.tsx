@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, MessageSquare } from "lucide-react";
 import { formatMessageTime } from "@/lib/format-time";
+import { useTyping } from "@/hooks/use-typing";
 
 interface MessageListProps {
     conversationId: Id<"conversations">;
@@ -91,8 +92,8 @@ export function MessageList({
                         >
                             <div
                                 className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${isOwn
-                                        ? "bg-violet-600 text-white rounded-br-md"
-                                        : "bg-gray-800 text-gray-100 rounded-bl-md"
+                                    ? "bg-violet-600 text-white rounded-br-md"
+                                    : "bg-gray-800 text-gray-100 rounded-bl-md"
                                     }`}
                             >
                                 {message.deleted ? (
@@ -125,14 +126,25 @@ export function MessageInput({ conversationId }: MessageInputProps) {
     const [body, setBody] = useState("");
     const sendMessage = useMutation(api.messages.send);
     const inputRef = useRef<HTMLInputElement>(null);
+    const { startTyping, stopTyping } = useTyping(conversationId);
 
     const handleSend = async () => {
         const trimmed = body.trim();
         if (!trimmed) return;
 
+        stopTyping();
         setBody("");
         await sendMessage({ conversationId, body: trimmed });
         inputRef.current?.focus();
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setBody(e.target.value);
+        if (e.target.value.trim()) {
+            startTyping();
+        } else {
+            stopTyping();
+        }
     };
 
     return (
@@ -147,7 +159,7 @@ export function MessageInput({ conversationId }: MessageInputProps) {
                 <Input
                     ref={inputRef}
                     value={body}
-                    onChange={(e) => setBody(e.target.value)}
+                    onChange={handleChange}
                     placeholder="Type a message..."
                     className="flex-1 bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus-visible:ring-violet-500"
                     autoFocus
@@ -164,3 +176,4 @@ export function MessageInput({ conversationId }: MessageInputProps) {
         </div>
     );
 }
+

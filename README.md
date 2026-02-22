@@ -52,6 +52,18 @@ Users can sign up, find each other, and have private conversations — all with 
 - Tapping a conversation opens full-screen chat
 - Back arrow button (←) takes you back to the conversation list on mobile
 
+### ✅ Step 7 — Online/Offline Status
+- Green dot next to users who currently have the app open
+- Shows in both the sidebar conversation list and the chat header
+- Updates in real time — close a tab and the dot disappears
+- Uses heartbeat system (every 30s) to track presence
+
+### ✅ Step 8 — Typing Indicator
+- Shows "X is typing..." with animated dots when the other user is typing
+- Appears below the chat header in the conversation view
+- Disappears after 2 seconds of inactivity or when the message is sent
+- Chat header also shows "typing..." / "online" / "offline" status text
+
 ## Running Locally
 
 Need Node 18+ and free accounts on [Clerk](https://clerk.com) and [Convex](https://convex.dev).
