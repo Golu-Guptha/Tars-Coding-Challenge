@@ -1,63 +1,76 @@
 # Tars Chat
 
-A real-time chat application built with **Next.js**, **Convex**, **Clerk**, and **shadcn/ui**.
+Hey! This is my submission for the Tars Full-Stack Intern Challenge 2026.
 
-## Features
+I built a real-time chat app where users can sign up, find each other, and start chatting instantly. The messages sync across tabs/devices in real time — no refreshing needed.
 
-- ✅ Authentication (email + social login via Clerk)
-- ✅ User profiles synced to Convex
-- 🔜 User list & search
-- 🔜 One-on-one direct messages
-- 🔜 Message timestamps
-- 🔜 Empty states
-- 🔜 Responsive layout
-- 🔜 Online/offline status
-- 🔜 Typing indicator
-- 🔜 Unread message count
-- 🔜 Smart auto-scroll
+## What it does
 
-## Getting Started
+- **Sign up & log in** with email or Google (powered by Clerk)
+- **Find people** — browse all registered users, search by name
+- **Direct messages** — click on someone to start a private conversation
+- **Real-time everything** — messages, presence, typing indicators all update live
+- **Smart timestamps** — shows "2:34 PM" for today, "Feb 15, 2:34 PM" for older messages
+- **Unread badges** — see how many messages you missed at a glance
+- **Typing indicators** — see when someone is typing back
+- **Online status** — green dot shows who's currently active
+- **Mobile friendly** — full responsive layout, works great on phones
+- **Auto-scroll** — stays at the bottom for new messages, but won't interrupt if you're reading older ones
 
-### Prerequisites
+## Tech I used
 
-- Node.js 18+
-- Clerk account ([clerk.com](https://clerk.com))
-- Convex account ([convex.dev](https://convex.dev))
+- **Next.js** with App Router & TypeScript for the frontend
+- **Convex** as the backend — handles the database and real-time subscriptions
+- **Clerk** for all the auth stuff (sign-up, log-in, session management)
+- **Tailwind CSS** + **shadcn/ui** for the UI components
+- Deployed on **Vercel**
 
-### Setup
+## Running it locally
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/Golu-Guptha/Tars-Coding-Challenge.git
-   cd Tars-Coding-Challenge
-   ```
+You'll need Node 18+ and accounts on [Clerk](https://clerk.com) and [Convex](https://convex.dev) (both free).
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+# clone it
+git clone https://github.com/Golu-Guptha/Tars-Coding-Challenge.git
+cd Tars-Coding-Challenge
 
-3. Copy `.env.example` to `.env.local` and fill in your keys:
-   ```bash
-   cp .env.example .env.local
-   ```
+# install deps
+npm install
 
-4. Start Convex dev server:
-   ```bash
-   npx convex dev
-   ```
+# set up your env vars
+cp .env.example .env.local
+# then fill in your Clerk + Convex keys in .env.local
+```
 
-5. In another terminal, start the Next.js dev server:
-   ```bash
-   npm run dev
-   ```
+You need two terminals running:
 
-6. Open [http://localhost:3000](http://localhost:3000)
+```bash
+# Terminal 1 — start Convex
+npx convex dev
 
-## Tech Stack
+# Terminal 2 — start Next.js
+npm run dev
+```
 
-- **Next.js 16** (App Router)
-- **TypeScript**
-- **Convex** (real-time backend + database)
-- **Clerk** (authentication)
-- **Tailwind CSS v4** + **shadcn/ui**
+Then open [localhost:3000](http://localhost:3000) and you're good to go.
+
+## Project structure
+
+Nothing fancy, pretty standard Next.js layout:
+
+```
+app/            → pages and layouts (App Router)
+components/     → reusable UI components
+convex/         → backend functions, schema, auth config
+lib/            → utility functions (timestamp formatting, etc.)
+```
+
+## How it works (briefly)
+
+Convex handles all the data and real-time sync. When you send a message, it goes through a Convex mutation, gets stored in the database, and automatically pushes to every connected client that's subscribed to that conversation. No polling, no WebSocket boilerplate — Convex does it all out of the box.
+
+Clerk handles authentication and gives us JWTs that Convex uses to verify who's making each request. So every query and mutation is authenticated server-side.
+
+---
+
+Built by [Golu Kumar Gupta](https://github.com/Golu-Guptha) for the Tars Internship Challenge 2026.

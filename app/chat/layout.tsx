@@ -1,6 +1,7 @@
 "use client";
 
 import { Header } from "@/components/header";
+import { Sidebar } from "@/components/sidebar";
 
 export default function ChatLayout({
     children,
@@ -10,9 +11,12 @@ export default function ChatLayout({
     return (
         <div className="h-screen flex flex-col">
             <Header />
-            <main className="flex-1 overflow-hidden">
-                {children}
-            </main>
+            <div className="flex-1 flex overflow-hidden">
+                <Sidebar />
+                <main className="flex-1 overflow-hidden bg-gray-950">
+                    {children}
+                </main>
+            </div>
         </div>
     );
 }
