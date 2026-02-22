@@ -40,6 +40,18 @@ Users can sign up, find each other, and have private conversations — all with 
 - Messages from a different year include the year: `Feb 15, 2025, 2:34 PM`
 - Timestamps appear on hover to keep the UI clean
 
+### ✅ Step 5 — Empty States
+- "No conversations yet" when the sidebar is empty
+- "No messages yet" when opening a fresh conversation
+- "No users found" when search returns nothing
+- "No other users have signed up yet" when you're the only user
+
+### ✅ Step 6 — Responsive Layout
+- Desktop: sidebar + chat area shown side by side
+- Mobile: conversation list is the default view
+- Tapping a conversation opens full-screen chat
+- Back arrow button (←) takes you back to the conversation list on mobile
+
 ## Running Locally
 
 Need Node 18+ and free accounts on [Clerk](https://clerk.com) and [Convex](https://convex.dev).
