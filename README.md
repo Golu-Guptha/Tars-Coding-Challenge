@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tars Chat
+
+A real-time chat application built with **Next.js**, **Convex**, **Clerk**, and **shadcn/ui**.
+
+## Features
+
+- ✅ Authentication (email + social login via Clerk)
+- ✅ User profiles synced to Convex
+- 🔜 User list & search
+- 🔜 One-on-one direct messages
+- 🔜 Message timestamps
+- 🔜 Empty states
+- 🔜 Responsive layout
+- 🔜 Online/offline status
+- 🔜 Typing indicator
+- 🔜 Unread message count
+- 🔜 Smart auto-scroll
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js 18+
+- Clerk account ([clerk.com](https://clerk.com))
+- Convex account ([convex.dev](https://convex.dev))
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/Golu-Guptha/Tars-Coding-Challenge.git
+   cd Tars-Coding-Challenge
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Learn More
+3. Copy `.env.example` to `.env.local` and fill in your keys:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. Start Convex dev server:
+   ```bash
+   npx convex dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. In another terminal, start the Next.js dev server:
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+6. Open [http://localhost:3000](http://localhost:3000)
 
-## Deploy on Vercel
+## Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Next.js 16** (App Router)
+- **TypeScript**
+- **Convex** (real-time backend + database)
+- **Clerk** (authentication)
+- **Tailwind CSS v4** + **shadcn/ui**
