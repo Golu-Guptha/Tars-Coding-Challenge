@@ -7,7 +7,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { use, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageList, MessageInput } from "@/components/message-area";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
 
 export default function ConversationPage({
     params,
@@ -25,16 +25,17 @@ export default function ConversationPage({
     });
     const markRead = useMutation(api.conversations.markRead);
 
-    const otherUser = conversation?.otherMembers?.[0];
+    // For 1-on-1 chats, get presence of the other user
+    const otherUser = !conversation?.isGroup
+        ? conversation?.otherMembers?.[0]
+        : null;
     const presence = useQuery(
         api.presence.getByUserId,
         otherUser ? { userId: otherUser._id } : "skip"
     );
-
     const isOnline =
         presence?.online && Date.now() - presence.lastSeen < 60000;
 
-    // Mark conversation as read when opened and when new messages arrive
     useEffect(() => {
         if (conversationId) {
             markRead({ conversationId: conversationId as Id<"conversations"> });
@@ -52,6 +53,24 @@ export default function ConversationPage({
         );
     }
 
+    // Display name and avatar logic
+    const displayName = conversation.isGroup
+        ? conversation.groupName ?? "Group"
+        : otherUser?.name ?? "Unknown";
+
+    const memberCount = conversation.otherMembers
+        ? conversation.otherMembers.length + 1
+        : 0;
+
+    // Status text
+    const statusText = typingUsers && typingUsers.length > 0
+        ? `${typingUsers.map((u) => u?.name).join(", ")} typing...`
+        : conversation.isGroup
+            ? `${memberCount} members`
+            : isOnline
+                ? "online"
+                : "offline";
+
     return (
         <div className="h-full flex flex-col">
             {/* Chat Header */}
@@ -64,32 +83,36 @@ export default function ConversationPage({
                 </button>
                 <div className="relative">
                     <Avatar className="w-8 h-8">
-                        <AvatarImage src={otherUser?.imageUrl} />
-                        <AvatarFallback className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white text-xs font-medium">
-                            {otherUser?.name?.charAt(0)?.toUpperCase() ?? "?"}
+                        {!conversation.isGroup && otherUser?.imageUrl ? (
+                            <AvatarImage src={otherUser.imageUrl} />
+                        ) : null}
+                        <AvatarFallback
+                            className={`text-white text-xs font-medium ${conversation.isGroup
+                                    ? "bg-gradient-to-br from-emerald-600 to-teal-600"
+                                    : "bg-gradient-to-br from-violet-600 to-indigo-600"
+                                }`}
+                        >
+                            {conversation.isGroup
+                                ? conversation.groupName?.charAt(0)?.toUpperCase() ?? "G"
+                                : otherUser?.name?.charAt(0)?.toUpperCase() ?? "?"}
                         </AvatarFallback>
                     </Avatar>
-                    {isOnline && (
+                    {!conversation.isGroup && isOnline && (
                         <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-900 rounded-full" />
                     )}
                 </div>
                 <div>
-                    <p className="text-sm font-semibold text-white">
-                        {conversation.isGroup
-                            ? conversation.groupName
-                            : otherUser?.name ?? "Unknown"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                        {typingUsers && typingUsers.length > 0
-                            ? "typing..."
-                            : isOnline
-                                ? "online"
-                                : "offline"}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold text-white">{displayName}</p>
+                        {conversation.isGroup && (
+                            <Users className="w-3.5 h-3.5 text-gray-500" />
+                        )}
+                    </div>
+                    <p className="text-xs text-gray-500">{statusText}</p>
                 </div>
             </div>
 
-            {/* Typing indicator */}
+            {/* Typing indicator bar */}
             {typingUsers && typingUsers.length > 0 && (
                 <div className="px-4 py-1.5 flex items-center gap-2 text-xs text-gray-400 bg-gray-900/30">
                     <div className="flex gap-0.5">

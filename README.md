@@ -76,6 +76,28 @@ Users can sign up, find each other, and have private conversations — all with 
 - Click the button to jump to the bottom
 - Smart detection: within 100px of bottom counts as "at bottom"
 
+### ✅ Step 11 — Delete Own Messages
+- Hover over your own message to see the 🗑️ trash icon
+- Clicking it shows a confirmation popup ("Delete message? This can't be undone.")
+- Soft delete — message body is replaced with "🚫 This message was deleted"
+
+### ✅ Step 12 — Message Reactions
+- Hover any message → click 😊 to open the emoji picker (👍 ❤️ 😂 😮 😢)
+- Reactions show as small pills below the message with count
+- Click a reaction pill to toggle it on/off — your own reactions are highlighted in violet
+
+### ✅ Step 13 — Loading & Error States
+- Skeleton loaders in sidebar, user list, and conversation page while data loads
+- Animated bounce dots during message loading
+- Auth-aware loading on the root page (animated dots while redirecting)
+
+### ✅ Step 14 — Group Chat
+- Click the 👥 group icon in the sidebar header to create a group
+- Name the group and select 2+ members from the user list
+- Groups display with a green/teal avatar and group icon badge
+- Group header shows member count instead of online/offline
+- Conversations only appear in sidebar after the first message is sent
+
 ## Running Locally
 
 Need Node 18+ and free accounts on [Clerk](https://clerk.com) and [Convex](https://convex.dev).

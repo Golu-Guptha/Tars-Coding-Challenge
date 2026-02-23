@@ -7,9 +7,11 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, MessageSquare, ArrowDown } from "lucide-react";
+import { Send, MessageSquare, ArrowDown, Trash2, SmilePlus } from "lucide-react";
 import { formatMessageTime } from "@/lib/format-time";
 import { useTyping } from "@/hooks/use-typing";
+
+const EMOJI_LIST = ["👍", "❤️", "😂", "😮", "😢"];
 
 interface MessageListProps {
     conversationId: Id<"conversations">;
@@ -21,57 +23,47 @@ export function MessageList({
     currentUserId,
 }: MessageListProps) {
     const messages = useQuery(api.messages.list, { conversationId });
+    const deleteMessage = useMutation(api.messages.remove);
+    const toggleReaction = useMutation(api.reactions.toggle);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showNewMessages, setShowNewMessages] = useState(false);
     const isAtBottomRef = useRef(true);
     const prevMessageCountRef = useRef(0);
     const initialScrollDone = useRef(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-    // Check if user is near the bottom
     const checkIsAtBottom = useCallback(() => {
         if (!scrollRef.current) return true;
         const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
         return scrollHeight - scrollTop - clientHeight < 100;
     }, []);
 
-    // Handle scroll events — only update ref, no state that triggers re-renders
     const handleScroll = useCallback(() => {
         const atBottom = checkIsAtBottom();
         isAtBottomRef.current = atBottom;
-        if (atBottom) {
-            setShowNewMessages(false);
-        }
+        if (atBottom) setShowNewMessages(false);
     }, [checkIsAtBottom]);
 
-    // Scroll logic — only depends on messages, uses ref for isAtBottom
     useEffect(() => {
         if (!messages || !scrollRef.current) return;
-
         const count = messages.length;
-
-        // Initial load — scroll to bottom once
         if (!initialScrollDone.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
             initialScrollDone.current = true;
             prevMessageCountRef.current = count;
             return;
         }
-
-        // New message arrived
         if (count > prevMessageCountRef.current) {
             if (isAtBottomRef.current) {
-                // User is at bottom → auto-scroll
                 scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
             } else {
-                // User scrolled up → show button, don't interrupt
                 setShowNewMessages(true);
             }
         }
-
         prevMessageCountRef.current = count;
     }, [messages]);
 
-    // Reset when conversation changes
     useEffect(() => {
         initialScrollDone.current = false;
         prevMessageCountRef.current = 0;
@@ -86,6 +78,14 @@ export function MessageList({
             isAtBottomRef.current = true;
         }
     };
+
+    useEffect(() => {
+        const handleClick = () => {
+            setShowEmojiPicker(null);
+        };
+        window.addEventListener("click", handleClick);
+        return () => window.removeEventListener("click", handleClick);
+    }, []);
 
     if (!messages) {
         return (
@@ -129,6 +129,8 @@ export function MessageList({
                     const showAvatar =
                         !isOwn &&
                         (index === 0 || messages[index - 1].senderId !== message.senderId);
+                    const hasReactions =
+                        message.reactions && message.reactions.length > 0;
 
                     return (
                         <div
@@ -149,8 +151,60 @@ export function MessageList({
                                 </div>
                             )}
                             <div
-                                className={`max-w-[70%] group ${isOwn ? "items-end" : "items-start"}`}
+                                className={`max-w-[70%] group relative ${isOwn ? "items-end" : "items-start"}`}
                             >
+                                {/* Hover actions */}
+                                {!message.deleted && (
+                                    <div
+                                        className={`absolute -top-3 ${isOwn ? "right-0" : "left-0"} opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5 z-10`}
+                                    >
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowEmojiPicker(
+                                                    showEmojiPicker === message._id ? null : message._id
+                                                );
+                                            }}
+                                            className="p-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+                                        >
+                                            <SmilePlus className="w-3.5 h-3.5" />
+                                        </button>
+                                        {isOwn && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setConfirmDelete(message._id);
+                                                }}
+                                                className="p-1 rounded bg-gray-800 hover:bg-red-600 text-gray-400 hover:text-white transition-colors"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Emoji picker popup */}
+                                {showEmojiPicker === message._id && (
+                                    <div
+                                        className={`absolute -top-10 ${isOwn ? "right-0" : "left-0"} bg-gray-800 border border-gray-700 rounded-lg p-1 flex gap-0.5 z-20 shadow-lg`}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {EMOJI_LIST.map((emoji) => (
+                                            <button
+                                                key={emoji}
+                                                onClick={() => {
+                                                    toggleReaction({ messageId: message._id, emoji });
+                                                    setShowEmojiPicker(null);
+                                                }}
+                                                className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700 transition-colors text-base"
+                                            >
+                                                {emoji}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Message bubble */}
                                 <div
                                     className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${isOwn
                                             ? "bg-violet-600 text-white rounded-br-md"
@@ -158,13 +212,39 @@ export function MessageList({
                                         }`}
                                 >
                                     {message.deleted ? (
-                                        <span className="italic text-gray-400">
-                                            This message was deleted
+                                        <span className="italic text-gray-400 text-xs">
+                                            🚫 This message was deleted
                                         </span>
                                     ) : (
                                         message.body
                                     )}
                                 </div>
+
+                                {/* Reactions display (array format) */}
+                                {hasReactions && (
+                                    <div className={`flex gap-1 mt-0.5 flex-wrap ${isOwn ? "justify-end" : "justify-start"}`}>
+                                        {message.reactions.map((reaction: { emoji: string; count: number; userIds: string[] }) => {
+                                            const reacted = reaction.userIds.includes(currentUserId);
+                                            return (
+                                                <button
+                                                    key={reaction.emoji}
+                                                    onClick={() =>
+                                                        toggleReaction({ messageId: message._id, emoji: reaction.emoji })
+                                                    }
+                                                    className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-colors ${reacted
+                                                            ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
+                                                            : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
+                                                        }`}
+                                                >
+                                                    <span>{reaction.emoji}</span>
+                                                    <span className="text-[10px]">{reaction.count}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
+                                {/* Timestamp on hover */}
                                 <p
                                     className={`text-[10px] text-gray-600 mt-0.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity ${isOwn ? "text-right" : "text-left"
                                         }`}
@@ -187,6 +267,43 @@ export function MessageList({
                     New messages
                 </button>
             )}
+
+            {/* Delete confirmation dialog */}
+            {confirmDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                                <Trash2 className="w-5 h-5 text-red-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-white">Delete message?</h3>
+                                <p className="text-xs text-gray-400">This can&apos;t be undone.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setConfirmDelete(null)}
+                                className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={() => {
+                                    deleteMessage({ messageId: confirmDelete as Id<"messages"> });
+                                    setConfirmDelete(null);
+                                }}
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                                Delete
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -204,7 +321,6 @@ export function MessageInput({ conversationId }: MessageInputProps) {
     const handleSend = async () => {
         const trimmed = body.trim();
         if (!trimmed) return;
-
         stopTyping();
         setBody("");
         await sendMessage({ conversationId, body: trimmed });

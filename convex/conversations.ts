@@ -121,7 +121,7 @@ export const list = query({
         );
 
         return conversations
-            .filter(Boolean)
+            .filter((c) => c != null && c.lastMessageId)
             .sort(
                 (a, b) =>
                     (b!.lastMessageTime ?? b!._creationTime) -
@@ -191,5 +191,47 @@ export const markRead = mutation({
                 lastReadTime: Date.now(),
             });
         }
+    },
+});
+
+export const createGroup = mutation({
+    args: {
+        name: v.string(),
+        memberIds: v.array(v.id("users")),
+    },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new Error("Not authenticated");
+
+        const currentUser = await ctx.db
+            .query("users")
+            .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+            .unique();
+        if (!currentUser) throw new Error("User not found");
+
+        if (args.memberIds.length < 2) {
+            throw new Error("Group must have at least 2 other members");
+        }
+
+        const conversationId = await ctx.db.insert("conversations", {
+            isGroup: true,
+            groupName: args.name,
+        });
+
+        // Add current user
+        await ctx.db.insert("conversationMembers", {
+            conversationId,
+            userId: currentUser._id,
+        });
+
+        // Add selected members
+        for (const memberId of args.memberIds) {
+            await ctx.db.insert("conversationMembers", {
+                conversationId,
+                userId: memberId,
+            });
+        }
+
+        return conversationId;
     },
 });
