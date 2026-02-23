@@ -1,10 +1,10 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { use } from "react";
+import { use, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageList, MessageInput } from "@/components/message-area";
 import { ArrowLeft } from "lucide-react";
@@ -23,6 +23,7 @@ export default function ConversationPage({
     const typingUsers = useQuery(api.typing.getTyping, {
         conversationId: conversationId as Id<"conversations">,
     });
+    const markRead = useMutation(api.conversations.markRead);
 
     const otherUser = conversation?.otherMembers?.[0];
     const presence = useQuery(
@@ -32,6 +33,13 @@ export default function ConversationPage({
 
     const isOnline =
         presence?.online && Date.now() - presence.lastSeen < 60000;
+
+    // Mark conversation as read when opened and when new messages arrive
+    useEffect(() => {
+        if (conversationId) {
+            markRead({ conversationId: conversationId as Id<"conversations"> });
+        }
+    }, [conversationId, markRead, conversation?.lastMessageTime]);
 
     if (!conversation || !currentUser) {
         return (

@@ -96,11 +96,26 @@ export const list = query({
                     lastMessage = await ctx.db.get(conversation.lastMessageId);
                 }
 
+                // Calculate unread count
+                const lastReadTime = membership.lastReadTime ?? 0;
+                const allMessages = await ctx.db
+                    .query("messages")
+                    .withIndex("by_conversation", (q) =>
+                        q.eq("conversationId", conversation._id)
+                    )
+                    .collect();
+                const unreadCount = allMessages.filter(
+                    (m) =>
+                        m.senderId !== currentUser._id &&
+                        m._creationTime > lastReadTime
+                ).length;
+
                 return {
                     ...conversation,
                     otherMembers: otherMembers.filter(Boolean),
                     lastMessage,
                     myMembership: membership,
+                    unreadCount,
                 };
             })
         );
@@ -147,5 +162,34 @@ export const get = query({
             ...conversation,
             otherMembers: otherMembers.filter(Boolean),
         };
+    },
+});
+
+export const markRead = mutation({
+    args: { conversationId: v.id("conversations") },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) return;
+
+        const currentUser = await ctx.db
+            .query("users")
+            .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+            .unique();
+        if (!currentUser) return;
+
+        const membership = await ctx.db
+            .query("conversationMembers")
+            .withIndex("by_conv_user", (q) =>
+                q
+                    .eq("conversationId", args.conversationId)
+                    .eq("userId", currentUser._id)
+            )
+            .unique();
+
+        if (membership) {
+            await ctx.db.patch(membership._id, {
+                lastReadTime: Date.now(),
+            });
+        }
     },
 });

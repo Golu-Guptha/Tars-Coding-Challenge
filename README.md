@@ -64,6 +64,18 @@ Users can sign up, find each other, and have private conversations — all with 
 - Disappears after 2 seconds of inactivity or when the message is sent
 - Chat header also shows "typing..." / "online" / "offline" status text
 
+### ✅ Step 9 — Unread Message Count
+- Purple badge on sidebar conversations showing unread message count
+- Badge disappears when you open the conversation
+- Automatically marks conversation as read when viewed
+- Re-marks as read when new messages come in while you're looking at the conversation
+
+### ✅ Step 10 — Auto-scroll
+- Auto-scrolls to the latest message when new messages arrive (if you're at the bottom)
+- If you're reading older messages, it won't interrupt — a "↓ New messages" button appears instead
+- Click the button to jump to the bottom
+- Smart detection: within 100px of bottom counts as "at bottom"
+
 ## Running Locally
 
 Need Node 18+ and free accounts on [Clerk](https://clerk.com) and [Convex](https://convex.dev).

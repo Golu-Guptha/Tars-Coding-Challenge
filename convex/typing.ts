@@ -73,3 +73,27 @@ export const getTyping = query({
         return users.filter(Boolean);
     },
 });
+
+export const getAllActive = query({
+    args: {},
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) return [];
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+            .unique();
+        if (!user) return [];
+
+        const allTyping = await ctx.db.query("typing").collect();
+
+        const now = Date.now();
+        return allTyping.filter(
+            (t) =>
+                t.isTyping &&
+                t.userId !== user._id &&
+                now - t.updatedAt < 3000
+        );
+    },
+});

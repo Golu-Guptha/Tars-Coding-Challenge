@@ -12,6 +12,7 @@ import { UserList } from "@/components/user-list";
 export function Sidebar() {
     const conversations = useQuery(api.conversations.list);
     const presenceData = useQuery(api.presence.getAll);
+    const allTyping = useQuery(api.typing.getAllActive);
     const router = useRouter();
     const pathname = usePathname();
     const [showUsers, setShowUsers] = useState(false);
@@ -20,8 +21,16 @@ export function Sidebar() {
         if (!presenceData) return false;
         const presence = presenceData.find((p) => p.userId === userId);
         if (!presence) return false;
-        // Consider online if heartbeat within last 60 seconds
         return presence.online && Date.now() - presence.lastSeen < 60000;
+    };
+
+    const getTypingText = (conversationId: string) => {
+        if (!allTyping) return null;
+        const typers = allTyping.filter(
+            (t) => t.conversationId === conversationId
+        );
+        if (typers.length === 0) return null;
+        return "typing...";
     };
 
     return (
@@ -76,6 +85,7 @@ export function Sidebar() {
                                 const otherUser = conv.otherMembers?.[0];
                                 const isActive = pathname === `/chat/${conv._id}`;
                                 const online = otherUser ? isUserOnline(otherUser._id) : false;
+                                const typingText = getTypingText(conv._id);
 
                                 return (
                                     <button
@@ -93,7 +103,6 @@ export function Sidebar() {
                                                     {otherUser?.name?.charAt(0)?.toUpperCase() ?? "?"}
                                                 </AvatarFallback>
                                             </Avatar>
-                                            {/* Online indicator */}
                                             {online && (
                                                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-gray-900 rounded-full" />
                                             )}
@@ -107,14 +116,26 @@ export function Sidebar() {
                                                     ? conv.groupName
                                                     : otherUser?.name ?? "Unknown"}
                                             </p>
-                                            <p className="text-xs text-gray-500 truncate">
-                                                {conv.lastMessage
-                                                    ? conv.lastMessage.deleted
-                                                        ? "This message was deleted"
-                                                        : conv.lastMessage.body
-                                                    : "No messages yet"}
-                                            </p>
+                                            {typingText ? (
+                                                <p className="text-xs text-violet-400 truncate italic">
+                                                    {typingText}
+                                                </p>
+                                            ) : (
+                                                <p className="text-xs text-gray-500 truncate">
+                                                    {conv.lastMessage
+                                                        ? conv.lastMessage.deleted
+                                                            ? "This message was deleted"
+                                                            : conv.lastMessage.body
+                                                        : "No messages yet"}
+                                                </p>
+                                            )}
                                         </div>
+                                        {/* Unread badge */}
+                                        {conv.unreadCount > 0 && !isActive && (
+                                            <span className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-violet-600 text-white text-xs font-semibold flex items-center justify-center">
+                                                {conv.unreadCount}
+                                            </span>
+                                        )}
                                     </button>
                                 );
                             })
