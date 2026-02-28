@@ -22,6 +22,7 @@ export function MessageList({
     conversationId,
     currentUserId,
 }: MessageListProps) {
+    const conversation = useQuery(api.conversations.get, { conversationId });
     const messages = useQuery(api.messages.list, { conversationId });
     const deleteMessage = useMutation(api.messages.remove);
     const toggleReaction = useMutation(api.reactions.toggle);
@@ -150,7 +151,7 @@ export function MessageList({
 
                             {/* Message row */}
                             <div
-                                className={`flex items-end gap-2 ${isOwn ? "justify-end" : "justify-start"} ${showAvatar ? "mt-3" : "mt-0.5"
+                                className={`flex items-start gap-2 ${isOwn ? "justify-end" : "justify-start"} ${showAvatar ? "mt-3" : "mt-0.5"
                                     }`}
                             >
                                 {!isOwn && (
@@ -166,8 +167,16 @@ export function MessageList({
                                     </div>
                                 )}
                                 <div
-                                    className={`max-w-[70%] group relative ${isOwn ? "items-end" : "items-start"}`}
+                                    className={`max-w-[70%] group relative flex flex-col ${isOwn ? "items-end" : "items-start"
+                                        }`}
                                 >
+                                    {/* Sender Name */}
+                                    {showAvatar && (
+                                        <span className="text-[11px] text-gray-400 font-medium mb-0.5 ml-1">
+                                            {message.sender?.name}
+                                        </span>
+                                    )}
+
                                     {/* Hover actions */}
                                     {!message.deleted && (
                                         <div
