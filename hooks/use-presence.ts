@@ -18,11 +18,6 @@ export function usePresence() {
             heartbeat();
         }, 30000);
 
-        // Set offline on page close
-        const handleBeforeUnload = () => {
-            setOffline();
-        };
-
         // Set offline on visibility change (tab hidden)
         const handleVisibilityChange = () => {
             if (document.hidden) {
@@ -32,12 +27,10 @@ export function usePresence() {
             }
         };
 
-        window.addEventListener("beforeunload", handleBeforeUnload);
         document.addEventListener("visibilitychange", handleVisibilityChange);
 
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
-            window.removeEventListener("beforeunload", handleBeforeUnload);
             document.removeEventListener("visibilitychange", handleVisibilityChange);
             setOffline();
         };

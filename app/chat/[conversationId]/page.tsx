@@ -36,11 +36,18 @@ export default function ConversationPage({
     const isOnline =
         presence?.online && Date.now() - presence.lastSeen < 60000;
 
+    // Mark conversation as read — on mount, on new messages, and every 3s
     useEffect(() => {
-        if (conversationId) {
-            markRead({ conversationId: conversationId as Id<"conversations"> });
-        }
-    }, [conversationId, markRead, conversation?.lastMessageTime]);
+        if (!conversationId) return;
+        const convId = conversationId as Id<"conversations">;
+        // Mark immediately
+        markRead({ conversationId: convId });
+        // Keep marking while open (so sender gets blue ticks in real-time)
+        const interval = setInterval(() => {
+            markRead({ conversationId: convId });
+        }, 3000);
+        return () => clearInterval(interval);
+    }, [conversationId, markRead]);
 
     if (!conversation || !currentUser) {
         return (
@@ -88,8 +95,8 @@ export default function ConversationPage({
                         ) : null}
                         <AvatarFallback
                             className={`text-white text-xs font-medium ${conversation.isGroup
-                                    ? "bg-gradient-to-br from-emerald-600 to-teal-600"
-                                    : "bg-gradient-to-br from-violet-600 to-indigo-600"
+                                ? "bg-gradient-to-br from-emerald-600 to-teal-600"
+                                : "bg-gradient-to-br from-violet-600 to-indigo-600"
                                 }`}
                         >
                             {conversation.isGroup
@@ -98,7 +105,7 @@ export default function ConversationPage({
                         </AvatarFallback>
                     </Avatar>
                     {!conversation.isGroup && isOnline && (
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-900 rounded-full" />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-200 border-2 border-gray-900 rounded-full" />
                     )}
                 </div>
                 <div>

@@ -113,8 +113,8 @@ export function Sidebar() {
                                             key={conv._id}
                                             onClick={() => router.push(`/chat/${conv._id}`)}
                                             className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${isActive
-                                                    ? "bg-violet-500/10 border border-violet-500/20"
-                                                    : "hover:bg-gray-800/50"
+                                                ? "bg-violet-500/10 border border-violet-500/20"
+                                                : "hover:bg-gray-800/50"
                                                 }`}
                                         >
                                             <div className="relative shrink-0">
@@ -124,15 +124,15 @@ export function Sidebar() {
                                                     ) : null}
                                                     <AvatarFallback
                                                         className={`text-white text-sm font-medium ${conv.isGroup
-                                                                ? "bg-gradient-to-br from-emerald-600 to-teal-600"
-                                                                : "bg-gradient-to-br from-violet-600 to-indigo-600"
+                                                            ? "bg-gradient-to-br from-emerald-600 to-teal-600"
+                                                            : "bg-gradient-to-br from-violet-600 to-indigo-600"
                                                             }`}
                                                     >
                                                         {avatarText}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 {online && (
-                                                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-gray-900 rounded-full" />
+                                                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-gray-900 rounded-full animate-pulse" />
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0 text-left">

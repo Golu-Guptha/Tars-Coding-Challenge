@@ -7,8 +7,8 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, MessageSquare, ArrowDown, Trash2, SmilePlus } from "lucide-react";
-import { formatMessageTime } from "@/lib/format-time";
+import { Send, MessageSquare, ArrowDown, Trash2, SmilePlus, Check, CheckCheck } from "lucide-react";
+import { formatMessageTime, formatDateSeparator, getDateKey } from "@/lib/format-time";
 import { useTyping } from "@/hooks/use-typing";
 
 const EMOJI_LIST = ["👍", "❤️", "😂", "😮", "😢"];
@@ -80,9 +80,7 @@ export function MessageList({
     };
 
     useEffect(() => {
-        const handleClick = () => {
-            setShowEmojiPicker(null);
-        };
+        const handleClick = () => setShowEmojiPicker(null);
         window.addEventListener("click", handleClick);
         return () => window.removeEventListener("click", handleClick);
     }, []);
@@ -132,125 +130,155 @@ export function MessageList({
                     const hasReactions =
                         message.reactions && message.reactions.length > 0;
 
+                    // Date separator — show when day changes
+                    const currentDateKey = getDateKey(message._creationTime);
+                    const prevDateKey = index > 0 ? getDateKey(messages[index - 1]._creationTime) : null;
+                    const showDateSeparator = index === 0 || currentDateKey !== prevDateKey;
+
                     return (
-                        <div
-                            key={message._id}
-                            className={`flex items-end gap-2 ${isOwn ? "justify-end" : "justify-start"} ${showAvatar ? "mt-3" : "mt-0.5"
-                                }`}
-                        >
-                            {!isOwn && (
-                                <div className="w-7 shrink-0">
-                                    {showAvatar && (
-                                        <Avatar className="w-7 h-7">
-                                            <AvatarImage src={message.sender?.imageUrl} />
-                                            <AvatarFallback className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white text-[10px] font-medium">
-                                                {message.sender?.name?.charAt(0)?.toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                    )}
+                        <div key={message._id}>
+                            {/* Date separator */}
+                            {showDateSeparator && (
+                                <div className="flex items-center gap-3 my-4">
+                                    <div className="flex-1 h-px bg-gray-800" />
+                                    <span className="text-[11px] text-gray-500 font-medium px-2">
+                                        {formatDateSeparator(message._creationTime)}
+                                    </span>
+                                    <div className="flex-1 h-px bg-gray-800" />
                                 </div>
                             )}
+
+                            {/* Message row */}
                             <div
-                                className={`max-w-[70%] group relative ${isOwn ? "items-end" : "items-start"}`}
+                                className={`flex items-end gap-2 ${isOwn ? "justify-end" : "justify-start"} ${showAvatar ? "mt-3" : "mt-0.5"
+                                    }`}
                             >
-                                {/* Hover actions */}
-                                {!message.deleted && (
-                                    <div
-                                        className={`absolute -top-3 ${isOwn ? "right-0" : "left-0"} opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5 z-10`}
-                                    >
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShowEmojiPicker(
-                                                    showEmojiPicker === message._id ? null : message._id
-                                                );
-                                            }}
-                                            className="p-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
-                                        >
-                                            <SmilePlus className="w-3.5 h-3.5" />
-                                        </button>
-                                        {isOwn && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setConfirmDelete(message._id);
-                                                }}
-                                                className="p-1 rounded bg-gray-800 hover:bg-red-600 text-gray-400 hover:text-white transition-colors"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
+                                {!isOwn && (
+                                    <div className="w-7 shrink-0">
+                                        {showAvatar && (
+                                            <Avatar className="w-7 h-7">
+                                                <AvatarImage src={message.sender?.imageUrl} />
+                                                <AvatarFallback className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white text-[10px] font-medium">
+                                                    {message.sender?.name?.charAt(0)?.toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
                                         )}
                                     </div>
                                 )}
-
-                                {/* Emoji picker popup */}
-                                {showEmojiPicker === message._id && (
-                                    <div
-                                        className={`absolute -top-10 ${isOwn ? "right-0" : "left-0"} bg-gray-800 border border-gray-700 rounded-lg p-1 flex gap-0.5 z-20 shadow-lg`}
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        {EMOJI_LIST.map((emoji) => (
-                                            <button
-                                                key={emoji}
-                                                onClick={() => {
-                                                    toggleReaction({ messageId: message._id, emoji });
-                                                    setShowEmojiPicker(null);
-                                                }}
-                                                className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700 transition-colors text-base"
-                                            >
-                                                {emoji}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {/* Message bubble */}
                                 <div
-                                    className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${isOwn
+                                    className={`max-w-[70%] group relative ${isOwn ? "items-end" : "items-start"}`}
+                                >
+                                    {/* Hover actions */}
+                                    {!message.deleted && (
+                                        <div
+                                            className={`absolute -top-3 ${isOwn ? "right-0" : "left-0"} opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5 z-10`}
+                                        >
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setShowEmojiPicker(
+                                                        showEmojiPicker === message._id ? null : message._id
+                                                    );
+                                                }}
+                                                className="p-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+                                            >
+                                                <SmilePlus className="w-3.5 h-3.5" />
+                                            </button>
+                                            {isOwn && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setConfirmDelete(message._id);
+                                                    }}
+                                                    className="p-1 rounded bg-gray-800 hover:bg-red-600 text-gray-400 hover:text-white transition-colors"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Emoji picker popup */}
+                                    {showEmojiPicker === message._id && (
+                                        <div
+                                            className={`absolute -top-10 ${isOwn ? "right-0" : "left-0"} bg-gray-800 border border-gray-700 rounded-lg p-1 flex gap-0.5 z-20 shadow-lg`}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            {EMOJI_LIST.map((emoji) => (
+                                                <button
+                                                    key={emoji}
+                                                    onClick={() => {
+                                                        toggleReaction({ messageId: message._id, emoji });
+                                                        setShowEmojiPicker(null);
+                                                    }}
+                                                    className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700 transition-colors text-base"
+                                                >
+                                                    {emoji}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Message bubble */}
+                                    <div
+                                        className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${isOwn
                                             ? "bg-violet-600 text-white rounded-br-md"
                                             : "bg-gray-800 text-gray-100 rounded-bl-md"
-                                        }`}
-                                >
-                                    {message.deleted ? (
-                                        <span className="italic text-gray-400 text-xs">
-                                            🚫 This message was deleted
-                                        </span>
-                                    ) : (
-                                        message.body
-                                    )}
-                                </div>
+                                            }`}
+                                    >
+                                        {message.deleted ? (
+                                            <span className="italic text-gray-400 text-xs">
+                                                🚫 This message was deleted
+                                            </span>
+                                        ) : (
+                                            message.body
+                                        )}
+                                    </div>
 
-                                {/* Reactions display (array format) */}
-                                {hasReactions && (
-                                    <div className={`flex gap-1 mt-0.5 flex-wrap ${isOwn ? "justify-end" : "justify-start"}`}>
-                                        {message.reactions.map((reaction: { emoji: string; count: number; userIds: string[] }) => {
-                                            const reacted = reaction.userIds.includes(currentUserId);
-                                            return (
-                                                <button
-                                                    key={reaction.emoji}
-                                                    onClick={() =>
-                                                        toggleReaction({ messageId: message._id, emoji: reaction.emoji })
-                                                    }
-                                                    className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-colors ${reacted
+                                    {/* Reactions display */}
+                                    {hasReactions && (
+                                        <div className={`flex gap-1 mt-0.5 flex-wrap ${isOwn ? "justify-end" : "justify-start"}`}>
+                                            {message.reactions.map((reaction: { emoji: string; count: number; userIds: string[] }) => {
+                                                const reacted = reaction.userIds.includes(currentUserId);
+                                                return (
+                                                    <button
+                                                        key={reaction.emoji}
+                                                        onClick={() =>
+                                                            toggleReaction({ messageId: message._id, emoji: reaction.emoji })
+                                                        }
+                                                        className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-colors ${reacted
                                                             ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
                                                             : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                                                        }`}
-                                                >
-                                                    <span>{reaction.emoji}</span>
-                                                    <span className="text-[10px]">{reaction.count}</span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                                                            }`}
+                                                    >
+                                                        <span>{reaction.emoji}</span>
+                                                        <span className="text-[10px]">{reaction.count}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
 
-                                {/* Timestamp on hover */}
-                                <p
-                                    className={`text-[10px] text-gray-600 mt-0.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity ${isOwn ? "text-right" : "text-left"
-                                        }`}
-                                >
-                                    {formatMessageTime(message._creationTime)}
-                                </p>
+                                    {/* Timestamp + read receipts (always visible) */}
+                                    <div
+                                        className={`flex items-center gap-1 mt-0.5 px-1 ${isOwn ? "justify-end" : "justify-start"
+                                            }`}
+                                    >
+                                        <span className="text-[10px] text-gray-500">
+                                            {formatMessageTime(message._creationTime)}
+                                        </span>
+                                        {isOwn && !message.deleted && (
+                                            <span className={`flex items-center ${message.status === "read" ? "text-blue-400" : "text-gray-500"
+                                                }`}>
+                                                {message.status === "sent" ? (
+                                                    <Check className="w-3.5 h-3.5" />
+                                                ) : (
+                                                    <CheckCheck className="w-3.5 h-3.5" />
+                                                )}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     );

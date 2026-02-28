@@ -8,7 +8,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, UserPlus, MessageSquare } from "lucide-react";
+import { Search, UserPlus, MessageSquare, ArrowLeft } from "lucide-react";
 
 export function UserList({ onClose }: { onClose?: () => void }) {
     const [search, setSearch] = useState("");
@@ -30,6 +30,14 @@ export function UserList({ onClose }: { onClose?: () => void }) {
         <div className="flex flex-col h-full">
             <div className="p-4 border-b border-gray-800">
                 <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="p-1 -ml-1 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </button>
+                    )}
                     <UserPlus className="w-5 h-5 text-violet-400" />
                     Find Users
                 </h2>

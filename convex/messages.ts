@@ -91,6 +91,24 @@ export const list = query({
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) return [];
 
+        const currentUser = await ctx.db
+            .query("users")
+            .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+            .unique();
+        if (!currentUser) return [];
+
+        // Get other members' lastReadTime for read receipts
+        const members = await ctx.db
+            .query("conversationMembers")
+            .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+            .collect();
+        const otherMembers = members.filter((m) => m.userId !== currentUser._id);
+        const otherReadTimes = otherMembers
+            .map((m) => m.lastReadTime ?? 0)
+            .filter((t) => t > 0);
+
+        const presences = await ctx.db.query("presence").collect();
+
         const messages = await ctx.db
             .query("messages")
             .withIndex("by_conversation", (q) =>
@@ -102,13 +120,11 @@ export const list = query({
             messages.map(async (message) => {
                 const sender = await ctx.db.get(message.senderId);
 
-                // Get reactions for this message
                 const reactions = await ctx.db
                     .query("reactions")
                     .withIndex("by_message", (q) => q.eq("messageId", message._id))
                     .collect();
 
-                // Group reactions by emoji as array (emojis can't be Convex field names)
                 const emojiMap = new Map<string, string[]>();
                 for (const r of reactions) {
                     const existing = emojiMap.get(r.emoji) ?? [];
@@ -119,10 +135,32 @@ export const list = query({
                     ([emoji, userIds]) => ({ emoji, count: userIds.length, userIds })
                 );
 
+                // Read status: blue tick only when ALL other members have read
+                const isOwnMessage = message.senderId === currentUser._id;
+                let status: "sent" | "delivered" | "read" = "sent";
+                if (isOwnMessage && otherMembers.length > 0) {
+                    // ALL other members must have read for blue tick
+                    const allRead = otherMembers.every((m) => {
+                        const readTime = m.lastReadTime ?? 0;
+                        return readTime >= message._creationTime;
+                    });
+                    if (allRead) {
+                        status = "read";
+                    } else {
+                        // Delivered if ANY member has been online since message was sent
+                        const anyoneDelivered = otherMembers.some((m) => {
+                            const p = presences.find((presence) => presence.userId === m.userId);
+                            return p && p.lastSeen >= message._creationTime;
+                        });
+                        if (anyoneDelivered) status = "delivered";
+                    }
+                }
+
                 return {
                     ...message,
                     sender,
                     reactions: reactionList,
+                    status,
                 };
             })
         );
